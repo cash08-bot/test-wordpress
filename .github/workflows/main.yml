@@ -44,7 +44,7 @@ jobs:
         with:
           maven-version: '3.9.6'
 
-      - name: Build Java project and list contents
+      - name: Build Java project
         run: |
           mvn clean install
           echo "Listing contents of target directory:"
@@ -64,12 +64,12 @@ jobs:
         run: |
           docker push $ECR_URI:$IMAGE_TAG
 
-      - name: Rename built JAR to standard name
+      - name: Rename built JAR to jn-dev-wordpress-lambda.jar
         run: |
           mkdir -p artifacts
-          cp ./target/jn-wordpress-lambda-code-0.0.1-SNAPSHOT.jar artifacts/jn-dev-wordpress-lambda.jar
+          cp ./target/AWSLambda-1.0-SNAPSHOT.jar artifacts/jn-dev-wordpress-lambda.jar
           ls -lh artifacts/
 
-      - name: Upload JAR to S3 bucket ${{ env.BUCKET_NAME }}
+      - name: Upload Lambda JAR to S3
         run: |
           aws s3 cp artifacts/jn-dev-wordpress-lambda.jar s3://${{ env.BUCKET_NAME }}/lambda-code/jn-dev-wordpress-lambda.jar --region ${{ env.AWS_REGION }}
