@@ -1,6 +1,6 @@
 FROM wordpress:6.8-php8.4-apache
 
-# Copy WordPress files into /var/www/html (mimicking what the entrypoint does)
+# Copy WordPress files manually
 RUN cp -a /usr/src/wordpress/. /var/www/html/
 
 WORKDIR /var/www/html
@@ -12,5 +12,8 @@ RUN mkdir /tmp/html-backup && \
     mv /tmp/html-backup/readme.html . && \
     rmdir /tmp/html-backup && \
     echo "After cleanup:" && ls -al
+
+# Prevent WordPress from re-copying files at runtime
+RUN rm -rf /usr/src/wordpress/*
 
 EXPOSE 80
