@@ -1,21 +1,22 @@
-name: Build and Push Docker Image to ECR
+name: Build and Push Docker Image to ECR + Upload Lambda JAR to S3
 
 on:
   push:
-    branches: [main] # adjust if needed
+    branches: [main]
 
 env:
   AWS_REGION: us-east-1
   ECR_REPO_NAME: test-wprdpress-akash
   IMAGE_TAG: latest
+  BUCKET_NAME: jn-dev-s3-614056699201-wordpress
 
 jobs:
-  build-and-push:
-    name: Build & Push Docker Image to ECR
+  build-and-deploy:
+    name: Build & Push Docker Image to ECR + Upload to S3
     runs-on: ubuntu-latest
 
     permissions:
-      id-token: write   # required for OIDC
+      id-token: write
       contents: read
 
     steps:
@@ -32,6 +33,23 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Maven
+        uses: s4u/setup-maven-action@v1.11.0
+        with:
+          maven-version: '3.9.6'
+
+      - name: Build Java project
+        run: |
+          mvn clean install
+          echo "Listing contents of target directory:"
+          ls -lh target/
+
       - name: Build Docker Image
         run: |
           docker build -t $ECR_REPO_NAME:$IMAGE_TAG .
@@ -45,3 +63,13 @@ jobs:
       - name: Push Docker Image to ECR
         run: |
           docker push $ECR_URI:$IMAGE_TAG
+
+      - name: Rename built JAR to jn-dev-wordpress-lambda.jar
+        run: |
+          mkdir -p artifacts
+          cp ./target/AWSLambda-1.0-SNAPSHOT.jar artifacts/jn-dev-wordpress-lambda.jar
+          ls -lh artifacts/
+
+      - name: Upload Lambda JAR to S3
+        run: |
+          aws s3 cp artifacts/jn-dev-wordpress-lambda.jar s3://${{ env.BUCKET_NAME }}/lambda-code/jn-dev-wordpress-lambda.jar --region ${{ env.AWS_REGION }}
