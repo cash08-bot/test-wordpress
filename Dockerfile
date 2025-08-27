@@ -1,19 +1,25 @@
 FROM wordpress:6.8-php8.4-apache
 
 # Copy WordPress files manually
-RUN cp -a /usr/src/wordpress/. /var/www/html/
+RUN cp -a /usr/src/wordpress/. /var/www/html/ && \
+    echo "After copying WordPress files:" && ls -al /var/www/html
 
 WORKDIR /var/www/html
 
-# Preserve readme.html, delete everything else, then move it back
+# Backup readme.html, delete everything else, restore readme.html
 RUN mkdir /tmp/html-backup && \
     cp readme.html /tmp/html-backup/ && \
+    echo "After backing up readme.html:" && ls -al /var/www/html && \
     rm -rf ./* && \
+    echo "After deleting all files:" && ls -al /var/www/html && \
     mv /tmp/html-backup/readme.html . && \
     rmdir /tmp/html-backup && \
-    echo "After cleanup:" && ls -al
+    echo "After restoring readme.html:" && ls -al /var/www/html
 
-# Prevent WordPress from re-copying files at runtime
-RUN rm -rf /usr/src/wordpress/*
+# Remove WordPress source to prevent runtime restore
+RUN rm -rf /usr/src/wordpress/* && \
+    echo "After removing /usr/src/wordpress files:" && ls -al /usr/src/wordpress
 
 EXPOSE 80
+
+CMD ["apache2-foreground"]
