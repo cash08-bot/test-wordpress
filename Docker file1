@@ -1,1 +1,15 @@
+FROM wordpress:php8.1-apache
+
+# Set working directory to WordPress document root
+WORKDIR /var/www/html
+
+# Remove everything except README files
+# - Keep README.md or readme.html if present
+RUN find . -mindepth 1 ! -iname "readme*" -exec rm -rf {} +
+
+# Ensure permissions are correct
+RUN chown -R www-data:www-data /var/www/html
+
+# Start Apache
+CMD ["apache2-foreground"]
 
