@@ -2,7 +2,7 @@ FROM wordpress:6.8-php8.4-apache
 
 WORKDIR /var/www/html
 
-# Step 1: Copy WordPress files
+# Step 1: Copy WordPress file
 RUN cp -a /usr/src/wordpress/. .
 
 # Step 2: Backup readme.html if exists
