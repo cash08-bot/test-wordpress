@@ -20,7 +20,7 @@ RUN if [ -f /tmp/html-backup/readme.html ]; then \
         echo '<html><head><title>Readme</title></head>' >> readme.html && \
         echo '<body><h1>Welcome to WordPress</h1></body></html>' >> readme.html; \
     fi && \
-    rmdir /tmp/html-backup
+
 
 # Step 5: Create a custom .htaccess
 RUN echo '# BEGIN WordPress' > .htaccess && \
