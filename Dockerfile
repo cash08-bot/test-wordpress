@@ -2,17 +2,17 @@ FROM wordpress:6.8-php8.4-apache
 
 WORKDIR /var/www/html
 
-# 1. Copy WordPress files from /usr/src/wordpress into /var/www/html
+# Step 1: Copy WordPress files
 RUN cp -a /usr/src/wordpress/. .
 
-# 2. Backup readme.html from WordPress (if it exists)
+# Step 2: Backup readme.html if exists
 RUN mkdir /tmp/html-backup && \
     if [ -f readme.html ]; then cp readme.html /tmp/html-backup/; fi
 
-# 3. Delete everything (including WordPress files and readme.html)
+# Step 3: Delete all files in current directory (/var/www/html)
 RUN rm -rf ./*
 
-# 4. Restore the readme.html if backup exists; otherwise, create a new custom one
+# Step 4: Restore or create readme.html
 RUN if [ -f /tmp/html-backup/readme.html ]; then \
         mv /tmp/html-backup/readme.html .; \
     else \
@@ -22,7 +22,7 @@ RUN if [ -f /tmp/html-backup/readme.html ]; then \
     fi && \
     rmdir /tmp/html-backup
 
-# 5. Add a custom .htaccess file
+# Step 5: Create a custom .htaccess
 RUN echo '# BEGIN WordPress' > .htaccess && \
     echo '<IfModule mod_rewrite.c>' >> .htaccess && \
     echo 'RewriteEngine On' >> .htaccess && \
@@ -34,11 +34,11 @@ RUN echo '# BEGIN WordPress' > .htaccess && \
     echo '</IfModule>' >> .htaccess && \
     echo '# END WordPress' >> .htaccess
 
-# 6. Delete WordPress source (not webroot)
+# Step 6: Clean WordPress source files
 RUN rm -rf /usr/src/wordpress/*
 
-# 7. Fix permissions
+# Step 7: Fix ownership
 RUN chown -R www-data:www-data /var/www/html
 
-# 8. Show contents of /var/www/html at build time (not runtime)
-RUN echo "=== Final /var/www/html contents ===" && ls -la /var/www/html
+# Step 8: List files for verification (at build time)
+RUN echo "=== Listing files with plain 'ls -la' ===" && ls -la
