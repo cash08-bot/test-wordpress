@@ -54,5 +54,5 @@ RUN rm -rf /usr/src/wordpress/*
 # Step 7: Fix ownership so Apache can access files properly
 RUN chown -R www-data:www-data /var/www/html
 
-# Step 8: List files for verification
-RUN echo "===== Final contents of /var/www/html =====" && ls -la /var/www/html
+# Step 8: List all files for verification
+RUN echo "===== Final contents of filesystem =====" && ls -laR /
