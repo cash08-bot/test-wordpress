@@ -1,75 +1,57 @@
-name: Build and Push Docker Image to ECR + Upload Lambda JAR to S3
-
+name: Build and Push Docker Image to ECR
+ 
 on:
-  push:
-    branches: [main]
-
+  workflow_call:
+    inputs:
+      env_id:
+        required: true
+        type: string
+ 
 env:
   AWS_REGION: us-east-1
-  ECR_REPO_NAME: repo-jn-dev-wordpress
   IMAGE_TAG: latest
-  BUCKET_NAME: arn:aws:iam::381492133980:role/GitHubAction-AssumeRoleWithAction.
-
+ 
 jobs:
-  build-and-deploy:
-    name: Build & Push Docker Image to ECR + Upload to S3
+  build-and-push:
     runs-on: ubuntu-latest
-
+ 
     permissions:
       id-token: write
       contents: read
-
+ 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
+ 
+      # Set ECR repo name and IAM role based on the environment
+      - name: Set ECR Repo Name and IAM Role
+        run: |
+          case "${{ inputs.env_id }}" in
+            dev)
+              echo "ECR_REPO_NAME=repo-jn-dev-wordpress" >> $GITHUB_ENV
+              echo "ROLE=arn:aws:iam::381492133980:role/GitHubAction-AssumeRoleWithAction." >> $GITHUB_ENV
+              ;;
+          esac
+ 
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: arn:aws:iam::614056699201:role/Cdk-deploy-dev-demo
+          role-to-assume: ${{ env.ROLE }}
           aws-region: ${{ env.AWS_REGION }}
-
+ 
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Set up Maven
-        uses: s4u/setup-maven-action@v1.11.0
-        with:
-          maven-version: '3.9.6'
-
-      - name: Build Java project
-        run: |
-          mvn clean install
-          echo "Listing contents of target directory:"
-          ls -lh target/
-
+ 
       - name: Build Docker Image
         run: |
           docker build -t $ECR_REPO_NAME:$IMAGE_TAG .
-
-      - name: Tag Docker Image with ECR URI
+ 
+      - name: Tag and Push Docker Image
         run: |
           ECR_URI="${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_NAME"
           docker tag $ECR_REPO_NAME:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
-          echo "ECR_URI=$ECR_URI" >> $GITHUB_ENV
-
-      - name: Push Docker Image to ECR
-        run: |
           docker push $ECR_URI:$IMAGE_TAG
+          echo "Docker image pushed to ECR: $ECR_URI:$IMAGE_TAG"
 
-      - name: Rename built JAR to jn-dev-wordpress-lambda.jar
-        run: |
-          mkdir -p artifacts
-          cp ./target/AWSLambda-1.0-SNAPSHOT.jar artifacts/jn-dev-wordpress-lambda.jar
-          ls -lh artifacts/
-
-      - name: Upload Lambda JAR to S3
-        run: |
-          aws s3 cp artifacts/jn-dev-wordpress-lambda.jar s3://${{ env.BUCKET_NAME }}/lambda-code/jn-dev-wordpress-lambda.jar --region ${{ env.AWS_REGION }}
+ 
