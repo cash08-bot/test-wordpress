@@ -6,9 +6,9 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPO_NAME: test-wprdpress-akash
+  ECR_REPO_NAME: repo-jn-dev-wordpress
   IMAGE_TAG: latest
-  BUCKET_NAME: jn-dev-s3-614056699201-wordpress
+  BUCKET_NAME: arn:aws:iam::381492133980:role/GitHubAction-AssumeRoleWithAction.
 
 jobs:
   build-and-deploy:
