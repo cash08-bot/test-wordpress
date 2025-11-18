@@ -6,9 +6,9 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPO_NAME: repo-jn-dev-wordpress
+  ECR_REPO_NAME: repo-jn-stg-wordpress
   IMAGE_TAG: latest
-  BUCKET_NAME: jn-dev-s3-381492133980-wordpress
+  BUCKET_NAME: jn-dev-s3-614056699201-wordpress
 
 jobs:
   build-and-deploy:
@@ -26,7 +26,7 @@ jobs:
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: arn:aws:iam::381492133980:role/GitHubAction-AssumeRoleWithAction.
+          role-to-assume: arn:aws:iam::614056699201:role/Cdk-deploy-dev-demo
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
